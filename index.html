@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Чеклист английских слов</title>
+<meta name="description" content="100 английских слов уровня A2: отметь, какие знаешь, и отправь результат учителю.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+
+/* Layout: one narrow column like a dictionary page; sticky progress strip; words grouped by part of speech */
+:root{
+  --bg:#F4F5FA; --surface:#FFFFFF; --ink:#1A2040; --muted:#5D6482; --line:#DCE0EC;
+  --accent:#3245C8; --accent-ink:#FFFFFF;
+  --know:#18794E; --know-bg:#E1F2E9; --dont:#B53A27; --dont-bg:#FAE5E0; --on-sem:#FFFFFF;
+  --font-display:"Unbounded","Onest",system-ui,sans-serif;
+  --font-body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10121B; --surface:#191C29; --ink:#E6E8F3; --muted:#9AA0BB; --line:#2B2F42;
+    --accent:#8E9CFF; --accent-ink:#10121B;
+    --know:#5CCB97; --know-bg:#15302A; --dont:#F08B77; --dont-bg:#38201C; --on-sem:#10121B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10121B; --surface:#191C29; --ink:#E6E8F3; --muted:#9AA0BB; --line:#2B2F42;
+  --accent:#8E9CFF; --accent-ink:#10121B;
+  --know:#5CCB97; --know-bg:#15302A; --dont:#F08B77; --dont-bg:#38201C; --on-sem:#10121B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.45rem,4.6vw,2.05rem);line-height:1.15;letter-spacing:-0.01em;margin:0 0 10px;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:62ch}
+.lede b{color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:4px;margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;width:fit-content;max-width:100%}
+.tab{font:inherit;font-size:.9rem;font-weight:500;border:0;border-radius:7px;padding:7px 14px;background:none;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 12px;margin-top:20px;border-bottom:1px solid var(--line)}
+.meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.meter span{display:block;height:100%;transition:width .25s ease}
+.meter .k{background:var(--know)} .meter .u{background:var(--dont)}
+.counts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin-top:9px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.counts b{color:var(--ink);font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.dot.k{background:var(--know)} .dot.u{background:var(--dont)} .dot.n{background:var(--line)}
+.status{margin-left:auto;font-size:12.5px}
+.status.warn{color:var(--dont)}
+
+.group{margin-top:30px}
+.group h2{font-family:var(--font-display);font-size:1rem;font-weight:600;margin:0 0 8px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.group h2 .pos{font-family:var(--font-body);font-style:italic;font-weight:400;color:var(--muted);font-size:.92rem}
+.group h2 .n{margin-left:auto;font-family:var(--font-body);font-size:13px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+ul.words{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:9px 10px;border-bottom:1px solid var(--line);transition:background .15s}
+.row[data-state="k"]{background:var(--know-bg)}
+.row[data-state="u"]{background:var(--dont-bg)}
+.word{flex:1 1 200px;min-width:0;text-align:left;background:none;border:0;padding:4px 0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;border-radius:6px}
+.en{font-weight:600;font-size:1.08rem}
+.ipa{color:var(--muted);font-size:.86rem}
+.peek{color:var(--accent);font-size:.8rem;font-weight:500}
+.ru{flex-basis:100%;font-size:.94rem}
+.marks{display:flex;gap:6px}
+.m{font:inherit;font-size:.88rem;font-weight:500;border-radius:8px;padding:7px 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.m:hover{border-color:var(--muted)}
+.m.k[aria-pressed="true"]{background:var(--know);border-color:var(--know);color:var(--on-sem)}
+.m.u[aria-pressed="true"]{background:var(--dont);border-color:var(--dont);color:var(--on-sem)}
+
+.send{margin-top:40px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;display:grid;gap:10px}
+.send h3{margin:0;font-family:var(--font-display);font-size:.98rem;font-weight:600}
+.send p{margin:0;color:var(--muted);font-size:.92rem;max-width:62ch}
+.btn{font:inherit;font-weight:600;font-size:.92rem;border:0;border-radius:9px;padding:10px 16px;background:var(--accent);color:var(--accent-ink);cursor:pointer;justify-self:start}
+.btn.ghost{background:none;color:var(--accent);border:1px solid var(--line);font-weight:500;padding:6px 11px;font-size:.84rem}
+textarea.fallback{width:100%;min-height:140px;font:inherit;font-size:.85rem;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.toast{font-size:.85rem;color:var(--know);min-height:1.2em}
+
+/* Results (teacher) */
+.res-empty{margin-top:28px;padding:20px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.res-empty b{color:var(--ink)}
+.student{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.student:first-child{border-top:0}
+.s-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.s-head img{width:30px;height:30px;border-radius:50%}
+.s-name{font-weight:600;font-size:1.05rem}
+.s-date{color:var(--muted);font-size:.84rem}
+.s-head .btn{margin-left:auto}
+.s-stats{margin-top:10px}
+.s-label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:7px;padding:4px 9px;font-size:.88rem;background:var(--dont-bg);color:var(--ink)}
+.chip i{font-style:normal;color:var(--muted);margin-left:5px;font-size:.82rem}
+.chip.k{background:var(--know-bg)}
+details summary{cursor:pointer;color:var(--accent);font-size:.9rem;margin-top:12px}
+@media (max-width:440px){
+  .marks{width:100%}
+  .m{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.field{display:grid;gap:6px;max-width:360px}
+.field label{font-size:.85rem;color:var(--muted);font-weight:500}
+.field input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+a.btn{text-decoration:none;display:inline-block}
+.btn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.status{margin-left:auto;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Чеклист английских слов</h1>
+    <p class="lede">Отметь каждое слово: <b>Знаю</b> или <b>Не знаю</b>. Нажми на само слово, чтобы проверить перевод. Когда закончишь, отправь результат учителю кнопкой внизу.</p>
+  </header>
+
+  <div class="bar" aria-live="polite">
+    <div class="meter" aria-hidden="true"><span class="k" id="mk"></span><span class="u" id="mu"></span></div>
+    <div class="counts">
+      <span><span class="dot k"></span>Знаю <b id="ck">0</b></span>
+      <span><span class="dot u"></span>Не знаю <b id="cu">0</b></span>
+      <span><span class="dot n"></span>Осталось <b id="cn">100</b></span>
+      <span class="status">Отметки сохраняются на этом устройстве</span>
+    </div>
+  </div>
+
+  <main id="groups"></main>
+
+  <section class="send" id="send">
+    <h3>Отправить результат учителю</h3>
+    <p>Напиши своё имя, чтобы учитель понял, чей это результат, и выбери, куда отправить.</p>
+    <div class="field">
+      <label for="name">Твоё имя</label>
+      <input id="name" type="text" autocomplete="given-name" placeholder="Например, Аня">
+    </div>
+    <div class="actions">
+      <a class="btn" id="tg" href="#" target="_blank" rel="noopener">Отправить в Telegram</a>
+      <a class="btn alt" id="wa" href="#" target="_blank" rel="noopener">Отправить в WhatsApp</a>
+      <button class="btn alt" id="copy-all" type="button">Скопировать текстом</button>
+    </div>
+    <textarea class="fallback" id="fallback" readonly hidden aria-label="Результат для копирования"></textarea>
+    <div class="toast" id="toast" aria-live="polite"></div>
+  </section>
+</div>
+<script>
+
+const GROUPS = [
+  {title:"Глаголы", pos:"verbs", words:[
+    ["arrive","/əˈraɪv/","приезжать, прибывать"],
+    ["borrow","/ˈbɒrəʊ/","брать взаймы, одалживать"],
+    ["carry","/ˈkæri/","нести, носить"],
+    ["change","/tʃeɪndʒ/","менять, меняться"],
+    ["decide","/dɪˈsaɪd/","решать"],
+    ["describe","/dɪˈskraɪb/","описывать"],
+    ["explain","/ɪkˈspleɪn/","объяснять"],
+    ["invite","/ɪnˈvaɪt/","приглашать"],
+    ["prefer","/prɪˈfɜː/","предпочитать"],
+    ["remember","/rɪˈmembə/","помнить, вспоминать"],
+    ["travel","/ˈtrævl/","путешествовать"],
+    ["worry","/ˈwʌri/","волноваться, беспокоиться"],
+    ["agree","/əˈɡriː/","соглашаться"],
+    ["believe","/bɪˈliːv/","верить"],
+    ["enjoy","/ɪnˈdʒɔɪ/","получать удовольствие"],
+    ["hope","/həʊp/","надеяться"],
+    ["prepare","/prɪˈpeə/","готовить, готовиться"],
+    ["promise","/ˈprɒmɪs/","обещать"],
+    ["receive","/rɪˈsiːv/","получать"],
+    ["repeat","/rɪˈpiːt/","повторять"],
+    ["visit","/ˈvɪzɪt/","навещать, посещать"],
+    ["allow","/əˈlaʊ/","разрешать"],
+    ["compare","/kəmˈpeə/","сравнивать"],
+    ["complain","/kəmˈpleɪn/","жаловаться"],
+    ["improve","/ɪmˈpruːv/","улучшать"]
+  ]},
+  {title:"Прилагательные", pos:"adjectives", words:[
+    ["angry","/ˈæŋɡri/","злой, сердитый"],
+    ["afraid","/əˈfreɪd/","испуганный (be afraid — бояться)"],
+    ["bored","/bɔːd/","скучающий (мне скучно)"],
+    ["busy","/ˈbɪzi/","занятой"],
+    ["careful","/ˈkeəfl/","осторожный"],
+    ["cheap","/tʃiːp/","дешёвый"],
+    ["expensive","/ɪkˈspensɪv/","дорогой"],
+    ["clean","/kliːn/","чистый"],
+    ["dirty","/ˈdɜːti/","грязный"],
+    ["dangerous","/ˈdeɪndʒərəs/","опасный"],
+    ["empty","/ˈempti/","пустой"],
+    ["full","/fʊl/","полный"],
+    ["famous","/ˈfeɪməs/","знаменитый"],
+    ["friendly","/ˈfrendli/","дружелюбный"],
+    ["healthy","/ˈhelθi/","здоровый, полезный"],
+    ["kind","/kaɪnd/","добрый"],
+    ["lazy","/ˈleɪzi/","ленивый"],
+    ["lonely","/ˈləʊnli/","одинокий"],
+    ["noisy","/ˈnɔɪzi/","шумный"],
+    ["quiet","/ˈkwaɪət/","тихий"],
+    ["polite","/pəˈlaɪt/","вежливый"],
+    ["rude","/ruːd/","грубый"],
+    ["strong","/strɒŋ/","сильный"],
+    ["weak","/wiːk/","слабый"],
+    ["wet","/wet/","мокрый"]
+  ]},
+  {title:"Существительные", pos:"nouns", words:[
+    ["weather","/ˈweðə/","погода"],
+    ["holiday","/ˈhɒlədeɪ/","отпуск, каникулы"],
+    ["journey","/ˈdʒɜːni/","поездка, путешествие"],
+    ["neighbour","/ˈneɪbə/","сосед"],
+    ["kitchen","/ˈkɪtʃɪn/","кухня"],
+    ["ticket","/ˈtɪkɪt/","билет"],
+    ["price","/praɪs/","цена"],
+    ["mistake","/mɪˈsteɪk/","ошибка"],
+    ["advice","/ədˈvaɪs/","совет"],
+    ["health","/helθ/","здоровье"],
+    ["appointment","/əˈpɔɪntmənt/","запись (к врачу), встреча"],
+    ["luggage","/ˈlʌɡɪdʒ/","багаж"],
+    ["salary","/ˈsæləri/","зарплата"],
+    ["rent","/rent/","аренда, плата за жильё"],
+    ["queue","/kjuː/","очередь"],
+    ["receipt","/rɪˈsiːt/","чек"],
+    ["traffic","/ˈtræfɪk/","движение, пробки"],
+    ["weekend","/ˌwiːkˈend/","выходные"],
+    ["hobby","/ˈhɒbi/","хобби, увлечение"],
+    ["opinion","/əˈpɪnjən/","мнение"]
+  ]},
+  {title:"Наречия", pos:"как часто, когда, насколько", words:[
+    ["usually","/ˈjuːʒuəli/","обычно"],
+    ["often","/ˈɒfn/","часто"],
+    ["sometimes","/ˈsʌmtaɪmz/","иногда"],
+    ["rarely","/ˈreəli/","редко"],
+    ["already","/ɔːlˈredi/","уже"],
+    ["still","/stɪl/","всё ещё"],
+    ["yet","/jet/","ещё (не); уже (в вопросах)"],
+    ["soon","/suːn/","скоро"],
+    ["recently","/ˈriːsntli/","недавно"],
+    ["suddenly","/ˈsʌdənli/","вдруг, внезапно"],
+    ["probably","/ˈprɒbəbli/","вероятно, наверное"],
+    ["maybe","/ˈmeɪbi/","может быть"],
+    ["almost","/ˈɔːlməʊst/","почти"],
+    ["enough","/ɪˈnʌf/","достаточно"],
+    ["quite","/kwaɪt/","довольно, вполне"]
+  ]},
+  {title:"Связки и предлоги", pos:"linking words", words:[
+    ["although","/ɔːlˈðəʊ/","хотя"],
+    ["however","/haʊˈevə/","однако"],
+    ["if","/ɪf/","если"],
+    ["until","/ənˈtɪl/","до, пока не"],
+    ["while","/waɪl/","пока, в то время как"],
+    ["during","/ˈdjʊərɪŋ/","во время"],
+    ["instead of","/ɪnˈsted əv/","вместо"],
+    ["without","/wɪˈðaʊt/","без"],
+    ["between","/bɪˈtwiːn/","между"],
+    ["behind","/bɪˈhaɪnd/","позади, за"],
+    ["through","/θruː/","через, сквозь"],
+    ["across","/əˈkrɒs/","через, поперёк"],
+    ["unless","/ənˈles/","если не"],
+    ["so","/səʊ/","поэтому, так что"],
+    ["besides","/bɪˈsaɪdz/","кроме того"]
+  ]}
+];
+
+const ALL = GROUPS.flatMap(g => g.words.map(w => w[0]));
+const TR = Object.fromEntries(GROUPS.flatMap(g => g.words.map(w => [w[0], w[2]])));
+const TOTAL = ALL.length;
+const LS_KEY = "vocab-checklist-marks-v1";
+const NAME_KEY = "vocab-checklist-name-v1";
+
+const $ = id => document.getElementById(id);
+function el(tag, attrs, ...kids){
+  const n = document.createElement(tag);
+  if (attrs) for (const [k,v] of Object.entries(attrs)){
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else n.setAttribute(k, v);
+  }
+  for (const c of kids) if (c != null) n.append(c);
+  return n;
+}
+
+let marks = {};
+try { const s = localStorage.getItem(LS_KEY); if (s) { const p = JSON.parse(s); if (p && typeof p === "object") marks = p; } } catch(e) {}
+for (const k of Object.keys(marks)) if (!TR[k] || (marks[k] !== "k" && marks[k] !== "u")) delete marks[k];
+try { $("name").value = localStorage.getItem(NAME_KEY) || ""; } catch(e) {}
+
+const rows = {};
+function buildChecklist(){
+  const root = $("groups");
+  for (const g of GROUPS){
+    const ul = el("ul", {class:"words"});
+    for (const [w, ipa, ru] of g.words){
+      const ruEl = el("span", {class:"ru", text: ru}); ruEl.hidden = true;
+      const peek = el("span", {class:"peek", text:"перевод"});
+      const wordBtn = el("button", {class:"word", type:"button", "aria-expanded":"false"},
+        el("span", {class:"en", text:w}), el("span", {class:"ipa", text:ipa}), peek, ruEl);
+      wordBtn.addEventListener("click", () => {
+        const open = ruEl.hidden;
+        ruEl.hidden = !open; peek.hidden = open;
+        wordBtn.setAttribute("aria-expanded", String(open));
+      });
+      const kBtn = el("button", {class:"m k", type:"button", "aria-pressed":"false", text:"Знаю"});
+      const uBtn = el("button", {class:"m u", type:"button", "aria-pressed":"false", text:"Не знаю"});
+      kBtn.addEventListener("click", () => setMark(w, "k"));
+      uBtn.addEventListener("click", () => setMark(w, "u"));
+      const li = el("li", {class:"row"}, wordBtn, el("div", {class:"marks"}, kBtn, uBtn));
+      rows[w] = {li, kBtn, uBtn};
+      ul.append(li);
+    }
+    const n = el("span", {class:"n"});
+    g.countEl = n;
+    root.append(el("section", {class:"group"},
+      el("h2", null, g.title, el("span", {class:"pos", text:g.pos}), n), ul));
+  }
+}
+function renderStates(){
+  let k = 0, u = 0;
+  for (const w of ALL){
+    const r = rows[w], s = marks[w] || "";
+    if (s) r.li.dataset.state = s; else delete r.li.dataset.state;
+    r.kBtn.setAttribute("aria-pressed", String(s === "k"));
+    r.uBtn.setAttribute("aria-pressed", String(s === "u"));
+    if (s === "k") k++; else if (s === "u") u++;
+  }
+  $("ck").textContent = k; $("cu").textContent = u; $("cn").textContent = TOTAL - k - u;
+  $("mk").style.width = (k / TOTAL * 100) + "%";
+  $("mu").style.width = (u / TOTAL * 100) + "%";
+  for (const g of GROUPS){
+    g.countEl.textContent = g.words.filter(w => marks[w[0]]).length + " из " + g.words.length;
+  }
+  updateLinks();
+}
+function setMark(w, v){
+  if (marks[w] === v) delete marks[w]; else marks[w] = v;
+  try { localStorage.setItem(LS_KEY, JSON.stringify(marks)); } catch(e) {}
+  renderStates();
+}
+
+function resultText(){
+  const name = $("name").value.trim();
+  const k = ALL.filter(w => marks[w] === "k"), u = ALL.filter(w => marks[w] === "u"), n = ALL.filter(w => !marks[w]);
+  const lines = ["Чеклист английских слов" + (name ? " — " + name : "")];
+  lines.push("", "Знаю (" + k.length + "): " + (k.join(", ") || "—"));
+  lines.push("", "Не знаю (" + u.length + "):");
+  if (u.length) for (const w of u) lines.push(w + " — " + TR[w]); else lines.push("—");
+  if (n.length) lines.push("", "Не отмечено (" + n.length + "): " + n.join(", "));
+  return lines.join("\n");
+}
+function updateLinks(){
+  const t = encodeURIComponent(resultText());
+  $("tg").href = "https://t.me/share/url?url=" + t;
+  $("wa").href = "https://wa.me/?text=" + t;
+}
+$("name").addEventListener("input", () => {
+  try { localStorage.setItem(NAME_KEY, $("name").value); } catch(e) {}
+  updateLinks();
+});
+$("copy-all").addEventListener("click", async () => {
+  const text = resultText(), fb = $("fallback"), toast = $("toast");
+  try {
+    await navigator.clipboard.writeText(text);
+    fb.hidden = true;
+    toast.textContent = "Скопировано. Вставь в сообщение учителю.";
+  } catch(e){
+    fb.value = text; fb.hidden = false; fb.focus(); fb.select();
+    toast.textContent = "Текст выделен ниже, скопируй его вручную.";
+  }
+});
+
+buildChecklist();
+renderStates();
+</script>
+</body>
+</html>
